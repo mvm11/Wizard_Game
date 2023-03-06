@@ -21,14 +21,14 @@ defmodule WizardGame do
     IO.puts("")
     first_user_answer = ask_for_option() |> option_to_int()
 
-    # Le indica al usuario cual fue la puerta que selecciono
-    IO.puts("")
-    IO.puts("La puerta que seleccionaste fue la número: #{first_user_answer}")
-
     # Le indica que saco
     IO.puts("")
     first = Enum.at(deck, first_user_answer)
-    IO.puts("Sacaste: #{first.award}")
+    IO.puts("Has obtenido: #{first.award}")
+
+    # Le indica al usuario cual fue la puerta que selecciono
+    IO.puts("")
+    IO.puts("La puerta que seleccionaste fue la: #{first.name}")
 
     # "Actualizamos la puerta seleccionada"
     IO.puts("")
@@ -37,22 +37,41 @@ defmodule WizardGame do
     # "Actualizamos las puertas
     IO.puts("")
     new_deck = replace_door_by_name(deck, new_door)
-    IO.puts("Las puertas actualizadas son: ")
-    IO.inspect new_deck
 
     # Creamos la estructura player
     player = Player.new_player(1, [first.award])
 
-    # El jugador es:
-    IO.puts("")
-    IO.puts("El jugador es")
-    IO.inspect player
+    # Le muestra al usuario cuanto dinero tiene
+    money_summary = sum_non_zeros(player.awards)
+    validate_money_summary(money_summary)
+
+    #Le muestra al usuario cuantas llantas tiene
+    tires_summary = count_zeros(player.awards)
+    validate_tires_summary(tires_summary)
 
     next_round(round_number, player, new_deck)
 
 
 
 
+  end
+
+  def validate_money_summary(money_summary) do
+    cond do
+      money_summary === 0 ->
+        :ok
+      money_summary > 0 ->
+        IO.puts("Total acumulado: $#{money_summary}")
+    end
+  end
+
+  def validate_tires_summary(tires_summary) do
+    cond do
+      tires_summary === 0 ->
+        :ok
+      tires_summary > 0 ->
+        IO.puts("Llantas encontradas: #{tires_summary}")
+    end
   end
 
   def show_intro(round_number) do
@@ -116,15 +135,15 @@ defmodule WizardGame do
      IO.puts("")
      user_answer = ask_for_option() |> option_to_int()
 
-     # Le indica al usuario cual fue la puerta que selecciono
-     IO.puts("")
-     IO.puts("La puerta que seleccionaste fue la número: #{user_answer}")
-
      # Le indica que saco
      IO.puts("")
      option = Enum.at(doors, user_answer)
-     IO.puts("Sacaste: ")
+     IO.puts("Has obtenido: ")
      IO.inspect option.award
+
+    # Le indica al usuario cual fue la puerta que selecciono
+     IO.puts("")
+     IO.puts("La puerta que seleccionaste fue la:  número: #{option.name}")
 
      # "Actualizamos la puerta seleccionada"
      IO.puts("")
@@ -140,6 +159,14 @@ defmodule WizardGame do
     # Actualizamos la estructura player
     new_player = validate_player(option, player, flatter_player_awards)
 
+    # Le muestra al usuario cuanto dinero tiene
+    money_summary = sum_non_zeros(new_player.awards)
+    validate_money_summary(money_summary)
+
+    #Le muestra al usuario cuantas llantas tiene
+    tires_summary = count_zeros(new_player.awards)
+    validate_tires_summary(tires_summary)
+
     # Contamos el numero de errores del jugador y validamos intentos del jugador
     Enum.filter(new_player.awards, fn award -> award === "X" end) |> Enum.count() |> check_player_mistakes(new_player.awards)
 
@@ -154,7 +181,13 @@ defmodule WizardGame do
     IO.puts("Tienes tres errores, no puedes seguir jugando")
     IO.puts("")
     ganancias(awards)
-    :lose
+    System.halt(0)
+  end
+
+  def check_player_mistakes(number_of_mistakes, _awards) when number_of_mistakes === 1  do
+    IO.puts("")
+    IO.puts("Tienes #{number_of_mistakes} error")
+    IO.puts("")
   end
 
   def check_player_mistakes(number_of_mistakes, _awards)  do
@@ -214,11 +247,11 @@ defmodule WizardGame do
 
   def ganancias(awards) do
     case {count_zeros(awards), sum_non_zeros(awards)} do
-      {4, 0} -> IO.puts("Has ganado un auto 🚗")
-      {0, 0} -> IO.puts("No has ganado nada 😔")
-      {0, total} -> IO.puts("Has ganado: #{total}")
-      {4, total} -> IO.puts("Has ganado: #{total} y un auto 🚗")
-      {_, total} -> IO.puts("Has ganado: #{total}")
+      {4, 0} -> IO.puts("--------------------------------------\n\nHas ganado un auto 🚗\n")
+      {0, 0} -> IO.puts("--------------------------------------\n\nNo has ganado nada 😔\n")
+      {0, total} -> IO.puts("--------------------------------------\n\nHas ganado: #{total}\n")
+      {4, total} -> IO.puts("--------------------------------------\n\nHas ganado: #{total} y un auto 🚗\n")
+      {_, total} -> IO.puts("--------------------------------------\n\nHas ganado: #{total}\n")
     end
   end
 
