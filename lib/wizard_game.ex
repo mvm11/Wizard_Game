@@ -26,10 +26,6 @@ defmodule WizardGame do
     first = Enum.at(deck, first_user_answer)
     IO.puts("Has obtenido: #{first.award}")
 
-    # Le indica al usuario cual fue la puerta que selecciono
-    IO.puts("")
-    IO.puts("La puerta que seleccionaste fue la: #{first.name}")
-
     # "Actualizamos la puerta seleccionada"
     IO.puts("")
     new_door = Door.new_door(first.name, first.award, true)
@@ -56,23 +52,7 @@ defmodule WizardGame do
 
   end
 
-  def validate_money_summary(money_summary) do
-    cond do
-      money_summary === 0 ->
-        :ok
-      money_summary > 0 ->
-        IO.puts("Total acumulado: $#{money_summary}")
-    end
-  end
 
-  def validate_tires_summary(tires_summary) do
-    cond do
-      tires_summary === 0 ->
-        :ok
-      tires_summary > 0 ->
-        IO.puts("Llantas encontradas: #{tires_summary}")
-    end
-  end
 
   def show_intro(round_number) do
     IO.puts("  ")
@@ -120,6 +100,35 @@ defmodule WizardGame do
     end
   end
 
+  def validate_money_summary(money_summary) do
+    cond do
+      money_summary === 0 ->
+        :ok
+      money_summary > 0 ->
+        IO.puts("Total acumulado: $#{money_summary}")
+    end
+  end
+
+  def validate_tires_summary(tires_summary) do
+    cond do
+      tires_summary === 0 ->
+        :ok
+      tires_summary > 0 ->
+        IO.puts("Llantas encontradas: #{tires_summary}")
+    end
+  end
+
+  def validate_mistakes_summary(number_mistakes) do
+    cond do
+      number_mistakes === 1 ->
+        IO.puts("Tienes #{number_mistakes} error")
+      number_mistakes > 1 ->
+        IO.puts("Tienes #{number_mistakes} errores")
+      number_mistakes < 1 ->
+        IO.puts("No tienes ningún error")
+    end
+  end
+
   def next_round(round_number, player, doors) do
 
     # Aumenta el numero de la ronda
@@ -138,12 +147,7 @@ defmodule WizardGame do
      # Le indica que saco
      IO.puts("")
      option = Enum.at(doors, user_answer)
-     IO.puts("Has obtenido: ")
-     IO.inspect option.award
-
-    # Le indica al usuario cual fue la puerta que selecciono
-     IO.puts("")
-     IO.puts("La puerta que seleccionaste fue la:  número: #{option.name}")
+     IO.puts("Has obtenido: #{option.award}")
 
      # "Actualizamos la puerta seleccionada"
      IO.puts("")
@@ -168,56 +172,48 @@ defmodule WizardGame do
     validate_tires_summary(tires_summary)
 
     # Contamos el numero de errores del jugador y validamos intentos del jugador
-    Enum.filter(new_player.awards, fn award -> award === "X" end) |> Enum.count() |> check_player_mistakes(new_player.awards)
+    number_mistakes = count_mistakes(new_player.awards)
+
+    #Le muestra al usuario cuantas llantas tiene
+    validate_mistakes_summary(number_mistakes)
 
     # validamos intentos del jugador
-    check_player_attempts(new_player.attempts, new_player.awards, new_round_number, new_player, new_deck)
-
+    check_player_attempts(new_player.attempts, new_player.awards, new_round_number, new_player, new_deck, number_mistakes)
 
   end
 
-  def check_player_mistakes(number_of_mistakes, awards) when number_of_mistakes >= 3 do
-    IO.puts("")
-    IO.puts("Tienes tres errores, no puedes seguir jugando")
-    IO.puts("")
-    ganancias(awards)
-    System.halt(0)
-  end
+  def check_player_attempts(attempt, awards, round_number, player, deck, number_mistakes)do
 
-  def check_player_mistakes(number_of_mistakes, _awards) when number_of_mistakes === 1  do
-    IO.puts("")
-    IO.puts("Tienes #{number_of_mistakes} error")
-    IO.puts("")
-  end
+    cond do
+      attempt >= 6 ->
+        IO.puts("")
+        IO.puts("Has utilizado tus 6 intentos, no puedes seguir jugando")
+        IO.puts("")
+        IO.puts("Las puertas reveladas son: ")
+        IO.puts("")
+        IO.inspect deck
+        IO.puts("")
+        ganancias(awards)
+      number_mistakes >= 3 ->
+        IO.puts("")
+        ganancias(awards)
+      number_mistakes === 1 ->
+        next_round(round_number, player, deck)
+      number_mistakes > 1 and number_mistakes < 3 ->
+        next_round(round_number, player, deck)
+      true ->
+        next_round(round_number, player, deck)
 
-  def check_player_mistakes(number_of_mistakes, _awards)  do
-    IO.puts("")
-    IO.puts("Tienes #{number_of_mistakes} errores")
-    IO.puts("")
-  end
-
-  def check_player_attempts(attempt, awards, round_number, player, deck)do
-
-    if(attempt >= 6)do
-      IO.puts("")
-      IO.puts("Has utilizado tus 6 intentos, no puedes seguir jugando")
-      IO.puts("")
-      IO.puts("Las puertas reveladas son: ")
-      IO.puts("")
-      IO.inspect deck
-      IO.puts("")
-      ganancias(awards)
-    else
-      next_round(round_number, player, deck)
     end
-
   end
 
   def validate_player(door, player, flatter_player_awards) do
-    if(door.wasOpenned === true) do
-      Player.new_player(player.attempts + 1, player.awards)
-    else
-      Player.new_player(player.attempts + 1, flatter_player_awards)
+
+    cond do
+      door.wasOpenned === true ->
+        Player.new_player(player.attempts + 1, player.awards)
+      true ->
+        Player.new_player(player.attempts + 1, flatter_player_awards)
     end
   end
 
@@ -263,6 +259,11 @@ defmodule WizardGame do
   defp sum_non_zeros(awards) do
     awards |> Enum.filter(fn award -> award !== 0 and Kernel.is_integer(award) end)
     |> Enum.sum()
+  end
+
+  def count_mistakes(awards) do
+    awards |> Enum.filter(fn award -> award === "X" end)
+    |> Enum.count()
   end
 
 

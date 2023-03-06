@@ -6,11 +6,11 @@ defmodule Deck do
 
     # Desordena la lista de números
 
-    Enum.shuffle(numbers)
+    #Enum.shuffle(numbers)
 
     # Combinamos las listas de numbers y awards para generar una tupla
 
-    |> Enum.zip(awards)
+    numbers |> Enum.zip(awards)
 
     # Creamos una nueva lista a partir de la tupla tomando cada número y premio
 
